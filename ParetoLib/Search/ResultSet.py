@@ -541,7 +541,7 @@ class ResultSet(object):
     # MatPlot Graphics
     def _plot_space_2D(self, xaxe=0, yaxe=1, opacity=1.0):
         # type: (ResultSet, int, int, float) -> list
-        patch = [self.xspace.plot_2D('blue', xaxe, yaxe, opacity)]
+        patch = [self.xspace.plot_2D('white', xaxe, yaxe, opacity)]
         return patch
 
     def _plot_yup_2D(self, xaxe=0, yaxe=1, opacity=1.0):

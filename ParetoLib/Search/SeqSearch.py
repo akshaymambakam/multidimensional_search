@@ -23,7 +23,7 @@ from sortedcontainers import SortedListWithKey, SortedSet
 
 import ParetoLib.Search as RootSearch
 
-from ParetoLib.Search.CommonSearch import EPS, DELTA, STEPS, binary_search
+from ParetoLib.Search.CommonSearch import EPS, DELTA, STEPS, binary_search, intersection_binary_search, discrete_binary_search
 from ParetoLib.Search.ResultSet import ResultSet
 
 from ParetoLib.Oracle.Oracle import Oracle
@@ -64,6 +64,36 @@ def multidim_search(xspace,
 
     return rs
 
+# Multidimensional search
+# The search returns a rectangle containing a solution and a Border
+def multidim_intersection_search(xspace,
+                    oracle1,oracle2,
+                    epsilon=EPS,
+                    delta=DELTA,
+                    max_step=STEPS,
+                    blocking=False,
+                    sleep=0.0,
+                    opt_level=0,
+                    logging=True):
+    # type: (Rectangle, Oracle, float, float, int, bool, float, int, bool) -> ParResultSet
+    md_search = [multidim_intersection_search_opt_0]
+    opt_level = 0 # TODO: Temporary hardcoding, remove if extended.
+    RootSearch.logger.info('Starting multidimensional search')
+    start = time.time()
+    print 'Just before the start of search.'
+    intersect_result = md_search[opt_level](xspace,
+                              oracle1, oracle2,
+                              epsilon=epsilon,
+                              delta=delta,
+                              max_step=max_step,
+                              blocking=blocking,
+                              sleep=sleep,
+                              logging=logging)
+    end = time.time()
+    time0 = end - start
+    RootSearch.logger.info('Time multidim search: ' + str(time0))
+
+    return intersect_result
 
 ##############################
 # opt_3 = Equivalent to opt_2 but using a Lattice for detecting dominated cubes in the boundary
@@ -940,7 +970,7 @@ def multidim_search_opt_0(xspace,
 
         # y, segment
         # y = search(xrectangle.diag(), f, epsilon)
-        y, steps_binsearch = binary_search(xrectangle.diag(), f, error)
+        y, steps_binsearch = discrete_binary_search(xrectangle.diag(), f, error)
         RootSearch.logger.debug('y: {0}'.format(y))
 
         # b0 = Rectangle(xspace.min_corner, y.low)
@@ -990,3 +1020,139 @@ def multidim_search_opt_0(xspace,
             rs.to_file(name)
 
     return ResultSet(border, ylow, yup, xspace)
+
+def multidim_intersection_search_opt_0(xspace,
+                          oracle1, oracle2,
+                          epsilon=EPS,
+                          delta=DELTA,
+                          max_step=STEPS,
+                          blocking=False,
+                          sleep=0.0,
+                          logging=True):
+    # type: (Rectangle, Oracle1, Oracle2, float, float, float, bool, float, bool) -> ResultSet
+
+    # Xspace is a particular case of maximal rectangle
+    # Xspace = [min_corner, max_corner]^n = [0, 1]^n
+    # xspace.min_corner = (0,) * n
+    # xspace.max_corner = (1,) * n
+
+    # Dimension
+    n = xspace.dim()
+
+    # Set of comparable and incomparable rectangles, represented by 'alpha' indices
+    comparable = comp(n)
+    incomparable = incomp(n)
+    # comparable = [zero, one]
+    # incomparable = list(set(alpha) - set(comparable))
+    # with:
+    # zero = (0_1,...,0_n)
+    # one = (1_1,...,1_n)
+
+    # List of incomparable rectangles
+    # border = [xspace]
+    border = SortedListWithKey(key=Rectangle.volume)
+    # border = SortedSet(key=Rectangle.volume)
+    border.add(xspace)
+
+    ylow = []
+    yup = []
+
+    # oracle functions
+    f1 = oracle1.membership()
+    f2 = oracle2.membership()
+
+    error = (epsilon,) * n
+    vol_total = xspace.volume()
+    vol_yup = 0
+    vol_ylow = 0
+    vol_border = vol_total
+    step = 0
+
+    # intersection.
+    intersect_box = []
+
+    RootSearch.logger.debug('xspace: {0}'.format(xspace))
+    RootSearch.logger.debug('vol_border: {0}'.format(vol_border))
+    RootSearch.logger.debug('delta: {0}'.format(delta))
+    RootSearch.logger.debug('step: {0}'.format(step))
+    RootSearch.logger.debug('incomparable: {0}'.format(incomparable))
+    RootSearch.logger.debug('comparable: {0}'.format(comparable))
+
+    # Create temporary directory for storing the result of each step
+    tempdir = tempfile.mkdtemp()
+
+    RootSearch.logger.info('Report\nStep, Ylow, Yup, Border, Total, nYlow, nYup, nBorder, BinSearch')
+    while (vol_border >= delta) and (step <= max_step) and (len(border) > 0):
+        step = step + 1
+        # if RootSearch.logger.isEnabledFor(RootSearch.logger.DEBUG):
+        #    RootSearch.logger.debug('border: {0}'.format(border))
+        # l.sort(key=Rectangle.volume)
+
+        xrectangle = border.pop()
+
+        RootSearch.logger.debug('xrectangle: {0}'.format(xrectangle))
+        RootSearch.logger.debug('xrectangle.volume: {0}'.format(xrectangle.volume()))
+        RootSearch.logger.debug('xrectangle.norm: {0}'.format(xrectangle.norm()))
+
+        # y, segment
+        # y = search(xrectangle.diag(), f, epsilon)
+        y, intersect_indicator, steps_binsearch = intersection_binary_search(xrectangle.diag(), f1, f2, error)
+        print 'Just after intersect binary.'
+        print 'vol_border:',vol_border,'step:',step,'max_step:',max_step,'len(border):',len(border)
+        print 'delta:', delta
+        RootSearch.logger.debug('y: {0}'.format(y))
+
+        if intersect_indicator >= 1:
+            intersect_box = [Rectangle(y.low,y.high)]
+            break
+        elif intersect_indicator == -3:
+            continue
+
+        # b0 = Rectangle(xspace.min_corner, y.low)
+        b0 = Rectangle(xrectangle.min_corner, y.low)
+        ylow.append(b0)
+        vol_ylow += b0.volume()
+
+        RootSearch.logger.debug('b0: {0}'.format(b0))
+        RootSearch.logger.debug('ylow: {0}'.format(ylow))
+
+        # b1 = Rectangle(y.high, xspace.max_corner)
+        b1 = Rectangle(y.high, xrectangle.max_corner)
+        yup.append(b1)
+        vol_yup += b1.volume()
+
+        RootSearch.logger.debug('b1: {0}'.format(b1))
+        RootSearch.logger.debug('yup: {0}'.format(yup))
+
+        yrectangle = Rectangle(y.low, y.high)
+        i = irect(incomparable, yrectangle, xrectangle)
+        # i = pirect(incomparable, yrectangle, xrectangle)
+        # l.extend(i)
+
+        border += i
+        RootSearch.logger.debug('irect: {0}'.format(i))
+
+        # Remove boxes in the boundary with volume 0
+        # border = border[border.bisect_key_right(0.0):]
+        del border[:border.bisect_key_left(0.0)]
+
+        vol_border = vol_total - vol_yup - vol_ylow
+
+        RootSearch.logger.info(
+            '{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}'.format(step, vol_ylow, vol_yup, vol_border, vol_total,
+                                                                 len(ylow), len(yup), len(border),
+                                                                 steps_binsearch))
+        if sleep > 0.0:
+            rs = ResultSet(border, ylow, yup, xspace)
+            if n == 2:
+                rs.plot_2D_light(blocking=blocking, sec=sleep, opacity=0.7)
+            elif n == 3:
+                rs.plot_3D_light(blocking=blocking, sec=sleep, opacity=0.7)
+
+        if logging:
+            rs = ResultSet(border, ylow, yup, xspace)
+            name = os.path.join(tempdir, str(step))
+            rs.to_file(name)
+
+    #return ResultSet(border, intersect_box.low, intersect_box.high, xspace) # TODO: needs some change.
+    return (intersect_box, border, xspace)

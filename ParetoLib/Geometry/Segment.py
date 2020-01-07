@@ -235,3 +235,25 @@ class Segment (object):
         """
         offset = div(self.diag(), 2.0)
         return add(self.low, offset)
+
+    def center_round(self):
+        # type: (Segment) -> tuple
+        """
+        Center of the Segment.
+
+        Args:
+            self (Segment): The Segment.
+
+        Returns:
+            tuple: Center of the Segment.
+
+        Example:
+        >>> x = (0,0)
+        >>> y = (1,1)
+        >>> s = Segment(x,y)
+        >>> s.center()
+        >>> (0.5,0.5)
+        """
+        offset = div(self.diag(), 2.0)
+        offset = (math.floor(offset[0]), math.floor(offset[1]))
+        return add(self.low, offset)

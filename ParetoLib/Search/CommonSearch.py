@@ -65,3 +65,88 @@ def binary_search(x,
             # dist = subtract(y.high, y.low)
             dist = y.norm()
     return y, i
+
+def intersection_binary_search(x,
+                  member1, member2,
+                  error):
+    # type: (Segment, callable, callable, tuple) -> (Segment, int)
+    # member1 is the function whose truth value increases with x.
+    # member2 is the function whose truth value decreases with x.
+    i = 0
+    y = x
+    intersect_indicator = -1
+    if member1(y.low) and member2(y.high):
+        # All the cube belongs to B1
+        intersect_indicator = 2
+    elif (not member1(y.high)) or (not member2(y.low)):
+        # All the cube belongs to B0
+        y.low = x.high
+        y.high = x.high
+        intersect_indicator = -3
+    else:
+        # We don't know. We search for a point in the diagonal
+        # dist = subtract(y.high, y.low)
+        dist = y.norm()
+        # while not less_equal(dist, error):
+        while dist > error[0]:
+            i += 1
+            # yval = div(add(y.low, y.high), 2.0)
+            yval = y.center()
+            # We need a oracle() for guiding the search
+            result1 = member1(yval)
+            result2 = member2(yval)
+            if result1 and result2:
+                # assign
+                y.low  = yval
+                y.high = yval
+                intersect_indicator = 1
+                break
+            elif not (result1 or result2):
+                # assign
+                y.low  = yval
+                y.high = yval
+                intersect_indicator = -2
+                break
+            elif result1 and (not result2):
+                y.high = yval
+            else: # (not result1) and (result2)
+                y.low  = yval
+            # dist = subtract(y.high, y.low)
+            dist = y.norm()
+    return y, intersect_indicator, i
+
+def discrete_binary_search(x,
+                  member,
+                  error):
+    # type: (Segment, callable, tuple) -> (Segment, int)
+    i = 0
+    y = x
+    search_ended = 0
+    if member(y.low):
+        # All the cube belongs to B1
+        y.low = x.low
+        y.high = x.low
+    elif not member(y.high):
+        # All the cube belongs to B0
+        y.low = x.high
+        y.high = x.high
+    else:
+        # We don't know. We search for a point in the diagonal
+        # dist = subtract(y.high, y.low)
+        dist = y.norm()
+        # while not less_equal(dist, error):
+        while dist > 1.42:
+            i += 1
+            # yval = div(add(y.low, y.high), 2.0)
+            yval = y.center_round()
+            # We need a oracle() for guiding the search
+            if member(yval):
+                y.high = yval
+            else:
+                y.low = yval
+            # dist = subtract(y.high, y.low)
+            dist = y.norm()
+        search_ended = 1
+    if search_ended:
+        y.low = y.high
+    return y, i
