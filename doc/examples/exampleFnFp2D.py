@@ -1,4 +1,4 @@
-from ParetoLib.Oracle.OracleFnFp import OracleFnFp
+from ParetoLib.Oracle.OracleFnFp2D import OracleFnFp2D
 from ParetoLib.Search.Search import Search2D, EPS, DELTA, STEPS
 
 # File containing the definition of the Oracle
@@ -9,7 +9,7 @@ human_readable = True
 min_x, min_y = (0.0, 0.0)
 max_x, max_y = (20.0, 20.0)
 
-oracle = OracleFnFp('/home/akshay/Documents/paretoDev/scratchFnFp', '221L.csv', (0, -5.0), (70, 5.0))
+oracle = OracleFnFp2D('/home/akshay/Documents/paretoDev/scratchFnFp', '221L.csv', (0, -5.0), (70, 5.0))
 rs = Search2D(ora=oracle,
               min_cornerx=min_x,
               min_cornery=min_y,

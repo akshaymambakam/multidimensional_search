@@ -18,12 +18,13 @@ import os
 import time
 import tempfile
 import itertools
+# import resource
 
 from sortedcontainers import SortedListWithKey, SortedSet
 
 import ParetoLib.Search as RootSearch
 
-from ParetoLib.Search.CommonSearch import EPS, DELTA, STEPS, binary_search, intersection_binary_search, discrete_binary_search
+from ParetoLib.Search.CommonSearch import EPS, DELTA, STEPS, binary_search, intersection_empty, intersection_binary_search, discrete_binary_search
 from ParetoLib.Search.ResultSet import ResultSet
 
 from ParetoLib.Oracle.Oracle import Oracle
@@ -61,6 +62,7 @@ def multidim_search(xspace,
     end = time.time()
     time0 = end - start
     RootSearch.logger.info('Time multidim search: ' + str(time0))
+    print 'Time multidim search (pareto front): ' + str(time0)
 
     return rs
 
@@ -80,7 +82,6 @@ def multidim_intersection_search(xspace,
     opt_level = 0 # TODO: Temporary hardcoding, remove if extended.
     RootSearch.logger.info('Starting multidimensional search')
     start = time.time()
-    print 'Just before the start of search.'
     intersect_result = md_search[opt_level](xspace,
                               oracle1, oracle2,
                               epsilon=epsilon,
@@ -92,6 +93,7 @@ def multidim_intersection_search(xspace,
     end = time.time()
     time0 = end - start
     RootSearch.logger.info('Time multidim search: ' + str(time0))
+    print 'Time multidim search (intersection): ' + str(time0)
 
     return intersect_result
 
@@ -970,7 +972,9 @@ def multidim_search_opt_0(xspace,
 
         # y, segment
         # y = search(xrectangle.diag(), f, epsilon)
-        y, steps_binsearch = discrete_binary_search(xrectangle.diag(), f, error)
+        #print 'resource usage before in mb:', resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
+        y, steps_binsearch = binary_search(xrectangle.diag(), f, error)
+        #print 'resource usage after in mb:', resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
         RootSearch.logger.debug('y: {0}'.format(y))
 
         # b0 = Rectangle(xspace.min_corner, y.low)
@@ -1019,6 +1023,10 @@ def multidim_search_opt_0(xspace,
             name = os.path.join(tempdir, str(step))
             rs.to_file(name)
 
+    print 'For pareto front construction algorithm:'
+    print 'remaining volume:', vol_border
+    print 'total volume:',     vol_total
+    print 'precentage unexplored:', (float(vol_border)/vol_total)*100
     return ResultSet(border, ylow, yup, xspace)
 
 def multidim_intersection_search_opt_0(xspace,
@@ -1094,18 +1102,16 @@ def multidim_intersection_search_opt_0(xspace,
         RootSearch.logger.debug('xrectangle.volume: {0}'.format(xrectangle.volume()))
         RootSearch.logger.debug('xrectangle.norm: {0}'.format(xrectangle.norm()))
 
-        # y, segment
-        # y = search(xrectangle.diag(), f, epsilon)
         y, intersect_indicator, steps_binsearch = intersection_binary_search(xrectangle.diag(), f1, f2, error)
-        print 'Just after intersect binary.'
-        print 'vol_border:',vol_border,'step:',step,'max_step:',max_step,'len(border):',len(border)
-        print 'delta:', delta
+        #print 'vol_border:',vol_border,'step:',step,'max_step:',max_step,'len(border):',len(border)
+        #print 'delta:', delta
         RootSearch.logger.debug('y: {0}'.format(y))
 
         if intersect_indicator >= 1:
             intersect_box = [Rectangle(y.low,y.high)]
             break
         elif intersect_indicator == -3:
+            vol_ylow += xrectangle.volume() # Temporary hack. Must purge the implementation of the algo.
             continue
 
         # b0 = Rectangle(xspace.min_corner, y.low)
@@ -1128,8 +1134,12 @@ def multidim_intersection_search_opt_0(xspace,
         i = irect(incomparable, yrectangle, xrectangle)
         # i = pirect(incomparable, yrectangle, xrectangle)
         # l.extend(i)
-
-        border += i
+        for rect in i:
+            if intersection_empty(rect.diag(), f1, f2):
+                vol_ylow += rect.volume()
+            else:
+                border.add(rect)
+        # border += i
         RootSearch.logger.debug('irect: {0}'.format(i))
 
         # Remove boxes in the boundary with volume 0
@@ -1153,6 +1163,19 @@ def multidim_intersection_search_opt_0(xspace,
             rs = ResultSet(border, ylow, yup, xspace)
             name = os.path.join(tempdir, str(step))
             rs.to_file(name)
+
+    '''
+    print 'Exploring the border:'
+    for box in border:
+        y, intersect_indicator, steps_binsearch = intersection_binary_search(box.diag(), f1, f2, [0])
+        print 'The box:', box
+        print 'search result:', intersect_indicator
+        print '---------------------------'
+    '''
+    print 'For pareto front intersection finding algorithm:'
+    print 'remaining volume:', vol_border
+    print 'total volume:',     vol_total
+    print 'percentage unexplored:', (float(vol_border)/vol_total)*100
 
     #return ResultSet(border, intersect_box.low, intersect_box.high, xspace) # TODO: needs some change.
     return (intersect_box, border, xspace)

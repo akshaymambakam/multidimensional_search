@@ -129,6 +129,7 @@ def multidim_search(xspace,
     end = time.time()
     time0 = end - start
     RootSearch.logger.info('Time multidim search: ' + str(time0))
+    print 'Time multidim search (pareto front): ' + str(time0)
 
     return rs
 

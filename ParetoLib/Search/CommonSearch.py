@@ -66,6 +66,13 @@ def binary_search(x,
             dist = y.norm()
     return y, i
 
+def intersection_empty(x, member1, member2):
+    if (not member1(x.high)) or (not member2(x.low)):
+        # The cube doesn't contain an intersection.
+        return True
+    else:
+        return False
+
 def intersection_binary_search(x,
                   member1, member2,
                   error):

@@ -566,13 +566,13 @@ class ResultSet(object):
                 var_names=list(),
                 blocking=False,
                 sec=0.0,
-                opacity=1.0):
+                opacity=1.0, fig_title='Approximation of the Pareto front'):
         # type: (ResultSet, str, int, int, list, bool, float, float) -> plt
         fig1 = plt.figure()
         # ax1 = fig1.add_subplot(111, aspect='equal')
         ax1 = fig1.add_subplot(111)
         # ax1.set_title('Approximation of the Pareto front, Parameters (' + str(xaxe) + ', ' + str(yaxe) + ')')
-        ax1.set_title('Approximation of the Pareto front')
+        ax1.set_title(fig_title)
 
         # The name of the inferred parameters using Pareto search are written in the axes of the graphic.
         # For instance, axe 0 represents parameter 'P0', axe 1 represents parameter 'P1', etc.
@@ -627,14 +627,14 @@ class ResultSet(object):
                       var_names=list(),
                       blocking=False,
                       sec=0.0,
-                      opacity=1.0):
+                      opacity=1.0, fig_title='Approximation of the Pareto front'):
         # type: (ResultSet, str, int, int, list, bool, float, float) -> plt
 
         fig1 = plt.figure()
         # ax1 = fig1.add_subplot(111, aspect='equal')
         ax1 = fig1.add_subplot(111)
         # ax1.set_title('Approximation of the Pareto front, Parameters (' + str(xaxe) + ', ' + str(yaxe) + ')')
-        ax1.set_title('Approximation of the Pareto front')
+        ax1.set_title(fig_title)
 
         # The name of the inferred parameters using Pareto search are written in the axes of the graphic.
         # For instance, axe 0 represents parameter 'P0', axe 1 represents parameter 'P1', etc.
@@ -777,12 +777,12 @@ class ResultSet(object):
                 var_names=list(),
                 blocking=False,
                 sec=0.0,
-                opacity=1.0):
+                opacity=1.0, fig_title='Approximation of the Pareto front'):
         # type: (ResultSet, str, int, int, int, list, bool, float, float) -> plt
         fig1 = plt.figure()
         # ax1 = fig1.add_subplot(111, aspect='equal', projection='3d')
         ax1 = fig1.add_subplot(111, projection='3d')
-        ax1.set_title('Approximation of the Pareto front')
+        ax1.set_title(fig_title)
 
         # The name of the inferred parameters using Pareto search are written in the axes of the graphic.
         # For instance, axe 0 represents parameter 'P0', axe 1 represents parameter 'P1', etc.
@@ -840,12 +840,12 @@ class ResultSet(object):
                       var_names=list(),
                       blocking=False,
                       sec=0.0,
-                      opacity=1.0):
+                      opacity=1.0, fig_title='Approximation of the Pareto front'):
         # type: (ResultSet, str, int, int, int, list, bool, float, float) -> plt
         fig1 = plt.figure()
         # ax1 = fig1.add_subplot(111, aspect='equal', projection='3d')
         ax1 = fig1.add_subplot(111, projection='3d')
-        ax1.set_title('Approximation of the Pareto front')
+        ax1.set_title(fig_title)
 
         # The name of the inferred parameters using Pareto search are written in the axes of the graphic.
         # For instance, axe 0 represents parameter 'P0', axe 1 represents parameter 'P1', etc.

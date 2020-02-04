@@ -6,7 +6,7 @@ from ParetoLib.Oracle.OracleSTLe import OracleSTLeLib
 from ParetoLib.Search.Search import SearchIntersection2D, Search2D, EPS, DELTA, STEPS
 
 
-class OracleFnFp(Oracle):
+class OracleFnFp2D(Oracle):
     def __init__(self, scratchDir, ecgFile, min_tuple, max_tuple):
         # type: (Condition, str, str, str) -> None
         Oracle.__init__(self)
