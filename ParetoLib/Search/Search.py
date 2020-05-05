@@ -109,7 +109,7 @@ def SearchIntersection2D(oracle1, oracle2,
              max_step=STEPS,
              blocking=False,
              sleep=0.0,
-             opt_level=2,
+             opt_level=1,
              parallel=False,
              logging=True,
              simplify=True):
@@ -131,14 +131,13 @@ def SearchIntersection3D(oracle1, oracle2,
              max_step=STEPS,
              blocking=False,
              sleep=0.0,
-             opt_level=2,
+             opt_level=1,
              parallel=False,
              logging=True,
              simplify=True):
     # type: (Oracle, float, float, float, float, float, float, int, bool, float, int, bool, bool, bool) -> ResultSet
     xyspace = create_3D_space(min_cornerx, min_cornery, min_cornerz, max_cornerx, max_cornery, max_cornerz)
-    print 'Just before multidim_intersection_search'
-    intersection_result = SeqSearch.multidim_intersection_search(xyspace, oracle1, oracle2, epsilon, delta, max_step,
+    intersection_result = SeqSearch.multidim_intersection_search(xyspace, [], oracle1, oracle2, epsilon, delta, max_step,
                                        blocking, sleep, opt_level, logging)
     return intersection_result
 
@@ -223,7 +222,7 @@ def Search3D(ora,
 
     # rs.plot_3D(targetx=xs, targety=ys, targetz=zs, blocking=True, var_names=ora.get_var_names())
     # rs.plot_3D_light(targetx=xs, targety=ys, targetz=zs, blocking=True, var_names=ora.get_var_names())
-    rs.plot_3D_light(blocking=True, var_names=ora.get_var_names())
+    #rs.plot_3D_light(blocking=True, var_names=ora.get_var_names())
     return rs
 
 
@@ -284,3 +283,24 @@ def SearchND_2(ora,
         rs.simplify()
         rs.fusion()
     return rs
+
+def SearchIntersectionND_2(oracle1, oracle2,
+               list_intervals,
+               list_constraints=[],
+               epsilon=EPS,
+               delta=DELTA,
+               max_step=STEPS,
+               blocking=False,
+               sleep=0.0,
+               opt_level=2,
+               parallel=False,
+               logging=True,
+               simplify=True):
+    # type: (Oracle, list, float, float, int, bool, float, int, bool, bool, bool) -> ResultSet
+
+    # list_intervals = [(minx, maxx), (miny, maxy),..., (minz, maxz)]
+    xyspace = create_ND_space(list_intervals)
+
+    intersection_result = SeqSearch.multidim_intersection_search(xyspace, list_constraints, oracle1, oracle2, epsilon, delta, max_step,
+                                       blocking, sleep, opt_level, logging)
+    return intersection_result

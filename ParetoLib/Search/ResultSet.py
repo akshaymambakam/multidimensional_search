@@ -567,6 +567,8 @@ class ResultSet(object):
                 blocking=False,
                 sec=0.0,
                 opacity=1.0, fig_title='Approximation of the Pareto front'):
+
+        # plt.rcParams.update({'font.size': 35})
         # type: (ResultSet, str, int, int, list, bool, float, float) -> plt
         fig1 = plt.figure()
         # ax1 = fig1.add_subplot(111, aspect='equal')
@@ -619,6 +621,70 @@ class ResultSet(object):
 
         plt.close()
         return plt
+
+    def plot_2D_figs(self,rs2,
+                      filename='',
+                      xaxe=0,
+                      yaxe=1,
+                      var_names=list(),
+                      blocking=False,
+                      sec=0.0,
+                      opacity=1.0, fig_title='Approximation of the Pareto front'):
+        plt.rcParams.update({'font.size': 35})
+        # type: (ResultSet, str, int, int, list, bool, float, float) -> plt
+        fig1 = plt.figure()
+        # ax1 = fig1.add_subplot(111, aspect='equal')
+        ax1 = fig1.add_subplot(111)
+        # ax1.set_title('Approximation of the Pareto front, Parameters (' + str(xaxe) + ', ' + str(yaxe) + ')')
+        ax1.set_title(fig_title)
+
+        # The name of the inferred parameters using Pareto search are written in the axes of the graphic.
+        # For instance, axe 0 represents parameter 'P0', axe 1 represents parameter 'P1', etc.
+        # If parameter names are not provided (var_names is empty or smaller than 2D), then we use
+        # lexicographic characters by default.
+        var_names = [chr(i) for i in range(ord('a'), ord('z') + 1)] if len(var_names) < 2 else var_names
+        ax1.set_xlabel(var_names[xaxe % len(var_names)])
+        ax1.set_ylabel(var_names[yaxe % len(var_names)])
+
+        pathpatch_yup = self._plot_yup_2D(xaxe, yaxe, opacity)
+        pathpatch_ylow = self._plot_ylow_2D(xaxe, yaxe, opacity)
+        pathpatch_border = self._plot_border_2D(xaxe, yaxe, opacity)
+
+        pathpatch = pathpatch_yup
+        pathpatch += pathpatch_ylow
+        pathpatch += pathpatch_border
+        pathpatch += rs2._plot_yup_2D(xaxe, yaxe, opacity)
+        pathpatch += rs2._plot_ylow_2D(xaxe, yaxe, opacity)
+
+        for pathpatch_i in pathpatch:
+            ax1.add_patch(pathpatch_i)
+
+        # Set limits in the axes
+        ax1.set_xlim(self.xspace.min_corner[xaxe], self.xspace.max_corner[xaxe])
+        ax1.set_ylim(self.xspace.min_corner[yaxe], self.xspace.max_corner[yaxe])
+
+        #
+        fig1.tight_layout()
+        plt.tight_layout()
+        #
+
+        # plt.autoscale()
+        plt.xscale('linear')
+        plt.yscale('linear')
+
+        if sec > 0.0 and not blocking:
+            plt.ion()
+            plt.show()
+            plt.pause(float(sec))
+        else:
+            plt.ioff()
+            plt.show()
+
+        if filename != '':
+            fig1.savefig(filename, dpi=90, bbox_inches='tight')
+
+        plt.close()
+        return plt        
 
     def plot_2D_light(self,
                       filename='',
@@ -754,19 +820,19 @@ class ResultSet(object):
         faces = [self.xspace.plot_3D('blue', xaxe, yaxe, zaxe, opacity)]
         return faces
 
-    def _plot_yup_3D(self, xaxe=0, yaxe=1, zaxe=2, opacity=1.0):
+    def _plot_yup_3D(self, xaxe=0, yaxe=1, zaxe=2, opacity=1.0, clipBox=None):
         # type: (ResultSet, int, int, int, float) -> list
-        faces = [rect.plot_3D('green', xaxe, yaxe, zaxe, opacity) for rect in self.yup]
+        faces = [rect.plot_3D('green', xaxe, yaxe, zaxe, opacity, clipBox) for rect in self.yup]
         return faces
 
-    def _plot_ylow_3D(self, xaxe=0, yaxe=1, zaxe=2, opacity=1.0):
+    def _plot_ylow_3D(self, xaxe=0, yaxe=1, zaxe=2, opacity=1.0, clipBox=None):
         # type: (ResultSet, int, int, int, float) -> list
-        faces = [rect.plot_3D('red', xaxe, yaxe, zaxe, opacity) for rect in self.ylow]
+        faces = [rect.plot_3D('red', xaxe, yaxe, zaxe, opacity, clipBox) for rect in self.ylow]
         return faces
 
-    def _plot_border_3D(self, xaxe=0, yaxe=1, zaxe=2, opacity=1.0):
+    def _plot_border_3D(self, xaxe=0, yaxe=1, zaxe=2, opacity=1.0, clipBox=None):
         # type: (ResultSet, int, int, int, float) -> list
-        faces = [rect.plot_3D('blue', xaxe, yaxe, zaxe, opacity) for rect in self.border]
+        faces = [rect.plot_3D('blue', xaxe, yaxe, zaxe, opacity, clipBox) for rect in self.border]
         return faces
 
     def plot_3D(self,
@@ -777,7 +843,10 @@ class ResultSet(object):
                 var_names=list(),
                 blocking=False,
                 sec=0.0,
-                opacity=1.0, fig_title='Approximation of the Pareto front'):
+                opacity=1.0, fig_title='Approximation of the Pareto front', clip=False):
+        
+        plt.rcParams.update({'font.size': 30})
+
         # type: (ResultSet, str, int, int, int, list, bool, float, float) -> plt
         fig1 = plt.figure()
         # ax1 = fig1.add_subplot(111, aspect='equal', projection='3d')
@@ -793,9 +862,13 @@ class ResultSet(object):
         ax1.set_ylabel(var_names[yaxe % len(var_names)])
         ax1.set_zlabel(var_names[zaxe % len(var_names)])
 
-        faces_yup = self._plot_yup_3D(xaxe, yaxe, zaxe, opacity)
-        faces_ylow = self._plot_ylow_3D(xaxe, yaxe, zaxe, opacity)
-        faces_border = self._plot_border_3D(xaxe, yaxe, zaxe, opacity)
+        if clip:
+            clipB = self.xspace
+        else:
+            clipB = None
+        faces_yup = self._plot_yup_3D(xaxe, yaxe, zaxe, opacity, clipBox=clipB)
+        faces_ylow = self._plot_ylow_3D(xaxe, yaxe, zaxe, opacity, clipBox=clipB)
+        faces_border = self._plot_border_3D(xaxe, yaxe, zaxe, opacity, clipBox=clipB)
 
         faces = faces_yup
         faces += faces_ylow

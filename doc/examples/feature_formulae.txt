@@ -1,0 +1,501 @@
+# Find the size of the ditch.
+(F (0 inf)
+(and 
+(and 
+
+(<= x1 1)
+(>= x1 1)
+)
+(<= (On (0 136) (Min x0)) p1)
+)
+)
+day1: [[(-6.119785964393614,), (-4.767494209957121,)]]
+day5: [[(-6.511154526615144,), (-5.708010269069671,)]]
+# Find the location of the ditch.
+(F (0 inf)
+(and 
+(and 
+
+(<= x1 1)
+(>= x1 1)
+)
+(F (0 p1)
+(and 
+(<= x0 (On (-60 60) (Min x0)) )
+(<= x0 -4.0)
+)
+
+)
+)
+)
+day1: [[(51.00000810615063,), (58.99999641701698,)]]
+day5: [[(51.00000810615063,), (59.999999415326116,)]]
+# Find the size of the peak coming after the ditch.
+(F (0 inf)
+(and 
+(and 
+
+(<= x1 1)
+(>= x1 1)
+)
+(F (50 61)
+(and 
+(<= x0 (On (-60 60) (Min x0)) )
+(<= (On (0 60) (Max x0)) p1)
+)
+
+)
+)
+)
+day1: [[(1.2491768849372864,), (3.2969645097732543,)]]
+day5: [[(1.4319562766075136,), (2.579274543190002,)]]
+# Find the location of the peak coming after the ditch.
+(F (0 inf)
+(and 
+(and 
+
+(<= x1 1)
+(>= x1 1)
+)
+(F (50 61)
+(and 
+(<= x0 (On (-60 60) (Min x0)) )
+(F (0 p1)
+(and 
+(>= x0 (On (-10 10) (Max x0)))
+(>= x0 1)
+)
+)
+
+)
+
+)
+)
+)
+day1: [[(25.00000510532856,), (30.99999579441547,)]]
+day5: [[(23.000001675653454,), (26.999997098565096,)]]
+# Find the size of the peak coming before the ditch.
+(F (0 inf)
+(and 
+(and 
+
+(<= x1 1)
+(>= x1 1)
+)
+(<= (On (0 60) (Max x0)) p1)
+)
+)
+# Same but not the really the same.
+(F (0 inf)
+(and 
+(and 
+
+(<= x1 1)
+(>= x1 1)
+)
+(<= 
+(Until (0 136) 1 
+(Max x0)
+(and 
+(<= x0 (On (-60 60) (Min x0)) )
+(<= x0 -1)
+)
+)
+p1
+)
+
+)
+)
+day1: [[(1.0055536803245546,), (5.421073926925658,)]]
+day5: [[(0.7772844786643982,), (3.806946287345886,)]]
+# Find the location of the peak coming before the ditch.
+(F (0 inf)
+(and 
+(and 
+
+(<= x1 2)
+(>= x1 2)
+)
+(F (0 p1)
+(and 
+(>= (On (-10 10) (Max x0)) x0)
+(>= x0 2)
+)
+)
+
+)
+)
+day1: [[(48.0000029014349,), (56.9999970985651,)]]
+day5: [[(48.0000029014349,), (54.99999754843712,)]]
+
+# Discriminative formula.
+(F (0 inf)
+(and 
+(and 
+
+(<= x1 2)
+(>= x1 2)
+)
+(and 
+(<= (On (0 60) (Max x0)) p1)
+(F (50 61)
+(and 
+(<= x0 (On (-60 60) (Min x0)) )
+(F (0 27)
+(and 
+(>= x0 (On (-10 10) (Max x0)))
+(>= x0 1)
+)
+)
+
+)
+
+)
+)
+)
+)
+day1: [[(5.026556439113616,), (5.421068323516845,)]]
+# Total discrimination.
+(and 
+(or 
+(and 
+
+(<= x1 2)
+(>= x1 2)
+)
+(and 
+
+(<= x1 1)
+(>= x1 1)
+)
+)
+(or 
+(>= (On (0 60) (Max x0)) 5)
+(F (50 61)
+(and 
+(<= x0 (On (-60 60) (Min x0)) )
+(F (27 60)
+(and 
+(>= x0 (On (-10 10) (Max x0)))
+(>= x0 1)
+)
+)
+
+)
+
+)
+)
+)
+
+# On the test dataset.
+oneList len: 428
+twoList len: 433
+findList len: 436
+Present in findList but in oneList.
+Could not find: 14824
+Could not find: 14960
+Could not find: 25976
+Could not find: 67320
+Could not find: 76432
+Could not find: 81872
+Could not find: 89624
+Could not find: 91664
+Could not find: 100912
+Could not find: 107848
+426
+Present in oneList but in findList.
+Could not find: 96016
+Could not find: 98328
+426
+mambakaa@grepon:~/Documents/paretoDev/multidimensional_search/doc/examples$ python siftAndCompare.py 
+oneList len: 428
+twoList len: 433
+findList len: 436
+Present in findList but also in twoList.
+Could find: 14824
+Could find: 14960
+Could find: 25976
+Could find: 67320
+Could find: 76432
+Could find: 81872
+Could find: 89624
+Could find: 91664
+Could find: 100912
+Could find: 107848
+10
+
+# Another total discrimination.
+(and 
+(or 
+(and 
+
+(<= x1 2)
+(>= x1 2)
+)
+(and 
+
+(<= x1 1)
+(>= x1 1)
+)
+)
+(or 
+(>= (On (0 60) (Max x0)) 5)
+(F (0 136)
+(and 
+(and 
+(<= x0 (On (-60 60) (Min x0)) )
+(<= x0 -1)
+)
+
+(F (27 60)
+(and 
+(>= x0 (On (-10 10) (Max x0)))
+(>= x0 1)
+)
+)
+
+)
+
+)
+)
+)
+
+
+# Learning using untils.
+(and 
+(or 
+(and 
+
+(<= x1 2)
+(>= x1 2)
+)
+(and 
+
+(<= x1 1)
+(>= x1 1)
+)
+)
+(or 
+(>= 
+(Until (0 136) 1 
+(Max x0)
+(and 
+(<= x0 (On (-60 60) (Min x0)) )
+(<= x0 -1)
+)
+)
+5
+)
+(F (0 136)
+(and 
+(and 
+(<= x0 (On (-60 60) (Min x0)) )
+(<= x0 -1)
+)
+
+(>= 
+(Lookup 27 0 
+
+(Until (0 inf) 0 
+(Max 
+(and 
+(>= x0 (On (-10 10) (Max x0)))
+(>= x0 1)
+)
+)
+
+(or 
+(and 
+(<= x1 2)
+(>= x1 2)
+)
+(and 
+(<= x1 1)
+(>= x1 1)
+)
+)
+
+)
+)
+1
+)
+
+)
+
+)
+)
+)
+
+## backup formula simple.
+(and  
+(and 
+
+(<= x1 2)
+(>= x1 2)
+)
+
+(not 
+(or 
+(>= (On (0 60) (Max x0)) 5)
+(F (50 61)
+(and 
+(<= x0 (On (-10 10) (Min x0)) )
+(F (27 60)
+(and 
+(>= x0 (On (-10 10) (Max x0)))
+(>= x0 1)
+)
+)
+
+)
+
+)
+)
+)
+)
+
+## Yet another total discriminator
+(G (0 inf)
+
+(-> 
+
+(and 
+
+(<= x1 1)
+(>= x1 1)
+)
+
+(or 
+(>= 
+(Until (0 136) 1 
+(Max x0)
+(and 
+(<= x0 (On (-10 10) (Min x0)) )
+(<= x0 -1)
+)
+)
+p1
+)
+(F (0 136)
+(and 
+(and 
+(<= x0 (On (-10 10) (Min x0)) )
+(<= x0 -1)
+)
+
+(F (p2 70-p3)
+(and 
+(>= x0 (On (-10 10) (Max x0)))
+(>= x0 1)
+)
+)
+
+)
+
+)
+)
+
+
+)
+
+)
+
+# Formula with error 2.
+(and 
+(or 
+(and 
+
+(<= x1 2)
+(>= x1 2)
+)
+(and 
+
+(<= x1 1)
+(>= x1 1)
+)
+)
+
+(or 
+(>= 
+(Until (0 136) 1 
+(Max x0)
+(and 
+(<= x0 (On (-10 10) (Min x0)) )
+(<= x0 -1)
+)
+)
+4
+)
+(F (0 136)
+(and 
+(and 
+(<= x0 (On (-10 10) (Min x0)) )
+(<= x0 -1)
+)
+
+(F (28.2 43)
+(and 
+(>= x0 (On (-10 10) (Max x0)))
+(>= x0 1)
+)
+)
+
+)
+
+)
+)
+
+)
+
+# Formula with error 17
+(and 
+(or 
+(and 
+
+(<= x1 2)
+(>= x1 2)
+)
+(and 
+
+(<= x1 1)
+(>= x1 1)
+)
+)
+
+(or 
+(F (0 136)
+(and 
+(and
+(<= x0 (On (-10 10) (Min x0)) )
+(<= x0 -1)
+)
+(F (27.5 58.7)
+(and 
+(>= x0 (On (-10 10) (Max x0)))
+(>= x0 1)
+)
+)
+)
+
+)
+(F (0 136)
+(and 
+(and
+(<= x0 (On (-10 10) (Min x0)) )
+(<= x0 -1)
+)
+(<=
+(On (0 60) (Max x0))
+1.28)
+)
+
+) )
+
+
+
+
+
+
+
+)
+

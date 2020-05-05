@@ -1,0 +1,6 @@
+topToken
+(and 
+(<= x0 (On (-10 10) (Min x0)) )
+(<= x0 -1.0)
+)
+bottomToken

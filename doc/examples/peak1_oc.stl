@@ -1,0 +1,6 @@
+topToken
+(and 
+(>= (On (-10 10) (Max x0)) x0)
+(>= x0 1)
+)
+bottomToken

@@ -64,7 +64,7 @@ def pareto_3D_Intersection(ecg_name, numParams, formula_name1, formula_name2, mi
   print output_intersect
   return output_intersect
 
-(intersection, border, xspace) = pareto_3D_Intersection('221', 3, 'ecg2_fn3D', 'ecg2_fp3D', (0, -5.0, -5.0), (70, 5.0, 5.0))
+(intersection, border, xspace, intersect_region) = pareto_3D_Intersection('221', 3, 'ecg2_fn3D', 'ecg2_fp3D', (0, -5.0, -5.0), (70, 5.0, 5.0))
 
-rs = ResultSet(border=border, yup=intersection, xspace=xspace)
+rs = ResultSet(border=border, yup=intersect_region, xspace=xspace)
 rs.plot_3D()

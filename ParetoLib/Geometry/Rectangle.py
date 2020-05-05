@@ -75,6 +75,7 @@ from ParetoLib.Geometry.Segment import Segment
 from ParetoLib.Geometry.Point import greater, greater_equal, less, less_equal, equal, add, subtract, div, mult, distance, dim, \
     incomparables, select, subt, int_to_bin_tuple, minimum, maximum#, r
 from ParetoLib._py3k import red
+from ParetoLib.Search.CommonSearch import EPS
 
 
 class Rectangle(object):
@@ -101,13 +102,20 @@ class Rectangle(object):
         # Volume (self.vol) is calculated on demand the first time is accessed, and cached afterwards.
         # Using 'None' for indicating that attribute vol is outdated (e.g., user changes min_corner or max_corners).
         self.vol = None
+        self.nInf = None
+        self.snInf = None
+        self.sigVol = None
         # Vertices are also cached.
         self.vertx = None
+        self.privilege = 1
 
         assert greater_equal(self.max_corner, self.min_corner) or incomparables(self.min_corner, self.max_corner)
 
     def reset(self):
         self.vol = None
+        self.nInf = None
+        self.snInf = None
+        self.sigVol = None
         self.vertx = None
 
     def __setattr__(self, name, value):
@@ -329,6 +337,112 @@ class Rectangle(object):
         if self.vol is None:
             self.vol = self._volume()
         return self.vol
+
+    def adjustedVolume(self):
+        return self.volume() / (1 + self.privilege)
+
+    def adjustedNormInf(self):
+        return self.normInf() / (1 + self.privilege)
+    
+    def _normInf(self):
+        # type: (Rectangle) -> float
+        diagonal_length = self.diag_vector()
+        normIf = 0
+        for i in diagonal_length:
+            if normIf < abs(i):
+                normIf = abs(i)
+        return normIf
+
+    def significantVolume(self):
+        # type: (Rectangle) -> float
+        """
+        Volume of the Rectangle.
+
+        Args:
+            self (Rectangle): The Rectangle.
+
+        Returns:
+            float: Volume of the Rectangle.
+
+        Example:
+        >>> x = (0,0,0)
+        >>> y = (2,2,2)
+        >>> r = Rectangle(x,y)
+        >>> r.volume()
+        >>> 8.0
+        """
+        # Recalculate volume if it is outdated
+        if self.sigVol is None:
+            self.sigVol = self._significantVolume()
+        return self.sigVol
+
+    def _significantVolume(self):
+        # type: (Rectangle) -> float
+        diagonal_length = self.diag_vector()
+        sigVol = 1
+        insigVol = 1
+        for i in diagonal_length:
+            if abs(i) > EPS:
+                sigVol *= abs(i)
+            else:
+                insigVol *= abs(i)
+        return sigVol
+
+    def _scaledNormInf(self, xspace):
+        diagonal_length = self.diag_vector()
+        scale_list      = xspace.diag_vector()
+        snormIf = 0
+        for i in range(len(diagonal_length)):
+            scaled_dim = diagonal_length[i] / scale_list[i]
+            if snormIf < abs(scaled_dim):
+                snormIf = abs(scaled_dim)
+        return snormIf
+
+    def scaledNormInf(self, xspace):
+        # type: (Rectangle) -> float
+        """
+        Volume of the Rectangle.
+
+        Args:
+            self (Rectangle): The Rectangle.
+
+        Returns:
+            float: Volume of the Rectangle.
+
+        Example:
+        >>> x = (0,0,0)
+        >>> y = (2,2,2)
+        >>> r = Rectangle(x,y)
+        >>> r.scaledNormInf()
+        >>> 1
+        """
+        # Recalculate volume if it is outdated
+        if self.snInf is None:
+            self.snInf = self._scaledNormInf(xspace)
+        return self.snInf
+
+    def normInf(self):
+        # type: (Rectangle) -> float
+        """
+        Volume of the Rectangle.
+
+        Args:
+            self (Rectangle): The Rectangle.
+
+        Returns:
+            float: Volume of the Rectangle.
+
+        Example:
+        >>> x = (0,0,0)
+        >>> y = (2,2,2)
+        >>> r = Rectangle(x,y)
+        >>> r.volume()
+        >>> 8.0
+        """
+        # Recalculate volume if it is outdated
+        if self.nInf is None:
+            self.nInf = self._normInf()
+        return self.nInf
 
     def num_vertices(self):
         # type: (Rectangle) -> int
@@ -1133,7 +1247,7 @@ class Rectangle(object):
             alpha=opacity
         )
 
-    def plot_3D(self, c='red', xaxe=0, yaxe=1, zaxe=2, opacity=1.0):
+    def plot_3D(self, c='red', xaxe=0, yaxe=1, zaxe=2, opacity=1.0, clipBox=None):
         # type: (Rectangle, str, int, int, int, float) -> Poly3DCollection
         """
          Function that creates a graphical representation of the rectangle in 3D.
@@ -1154,6 +1268,24 @@ class Rectangle(object):
 
         minc = (self.min_corner[xaxe], self.min_corner[yaxe], self.min_corner[zaxe],)
         maxc = (self.max_corner[xaxe], self.max_corner[yaxe], self.max_corner[zaxe],)
+        if not (clipBox is None):
+            clipminc = (clipBox.min_corner[xaxe], clipBox.min_corner[yaxe], clipBox.min_corner[zaxe],)
+            clipmaxc = (clipBox.max_corner[xaxe], clipBox.max_corner[yaxe], clipBox.max_corner[zaxe],)
+            a = [self.min_corner[xaxe], self.min_corner[yaxe], self.min_corner[zaxe]]
+            b = [self.max_corner[xaxe], self.max_corner[yaxe], self.max_corner[zaxe]]
+            for i in range(len(a)):
+                if a[i] < clipminc[i]:
+                    a[i] = clipminc[i]
+                elif a[i] > clipmaxc[i]:
+                    a[i] = clipmaxc[i]
+            for i in range(len(b)):
+                if b[i] < clipminc[i]:
+                    b[i] = clipminc[i]
+                elif b[i] > clipmaxc[i]:
+                    b[i] = clipmaxc[i]            
+            minc = (a[0], a[1], a[2],)
+            maxc = (b[0], b[1], b[2],)
+        
         rect = Rectangle(minc, maxc)
 
         # sorted(vertices) =
@@ -1340,6 +1472,88 @@ def incomp(d, opt=True):
         return incomp_expanded(d)
 
 
+'''
+NOTE:
+0 -> a
+1 -> b
+2 -> c
+3 -> (a+b)
+4 -> (b+c)
+5 -> (a+b+c)
+'''
+def incomp_segmentNegRemoveDown(d):
+    if d > 0:
+        return incomp_segmentNegRemoveDownE(d)
+    else:
+        return []
+
+def incomp_segmentNegRemoveDownE(d):
+    if(d == 0):
+        return []
+    else:
+        elist = ["0" + i for i in incomp_segmentNegRemoveDownE(d-1)]
+        elist += ["1" + ('3')*(d-1)]
+        return elist
+
+def incomp_segmentNegRemoveUp(d):
+    if d > 0:
+        return incomp_segmentNegRemoveUpE(d)
+    else:
+        return []
+
+def incomp_segmentNegRemoveUpE(d):
+    if(d == 0):
+        return []
+    else:
+        elist = ["1" + i for i in incomp_segmentNegRemoveUpE(d-1)]
+        elist += ["0" + ('3')*(d-1)]
+        return elist
+
+def incomp_segmentpos(d):
+    if d > 0:
+        return incomp_segmentposE(d)
+    else:
+        return []
+
+def incomp_segmentposE(d):
+    if (d == 0):
+        return []
+    else:
+        elist1 = ["1" + i for i in incomp_segmentposE(d-1)]
+        elistDown = ["0" + ('5')*(d-1)]
+        elistUp = ["2" + ('5')*(d-1)]
+        return elistDown+elistUp+elist1
+
+def incomp_segment(d):
+    if d > 0:
+        return incomp_segmentE(d)
+    else:
+        return []
+
+def incomp_segmentE(d):
+    if (d == 1):
+        return []
+    else:
+        elist = ["0" + i for i in incomp_segmentC(d-1)] + ["2" + i for i in incomp_segmentA(d-1)]
+        elist += ["1" + i for i in incomp_segmentE(d-1)]
+        return elist
+
+def incomp_segmentA(d):
+    if (d == 1):
+        return ["0"]
+    else:
+        alist = ["0" + ('5')*(d-1)]
+        alist += ["4" + i for i in incomp_segmentA(d-1)]
+        return alist
+
+def incomp_segmentC(d):
+    if (d == 1):
+        return ["2"]
+    else:
+        clist = ["2" + ('5')*(d-1)]
+        clist += ["3" + i for i in incomp_segmentC(d-1)]
+        return clist
+
 def incomp_expanded(d):
     # type: (int) -> list
     alphaprime = (range(2),) * d
@@ -1381,6 +1595,28 @@ def E(d):
 #################
 # Cube generators
 #################
+def intercpoint(i, alphai, yspace, xspace):
+    # type: (int, int, tuple, Rectangle) -> Rectangle
+    result_xspace = Rectangle(xspace.min_corner, xspace.max_corner)
+    if alphai == '0':
+        # result_xspace.min_corner = subt(i, xspace.min_corner, xspace.min_corner)
+        result_xspace.max_corner = subt(i, xspace.max_corner, yspace.min_corner)
+    elif alphai == '1':
+        result_xspace.min_corner = subt(i, xspace.min_corner, yspace.min_corner)
+        result_xspace.max_corner = subt(i, xspace.max_corner, yspace.max_corner)
+    elif alphai == '2':
+        result_xspace.min_corner = subt(i, xspace.min_corner, yspace.max_corner)
+        # result_xspace.max_corner = subt(i, xspace.max_corner, xspace.max_corner)
+    elif alphai == '3':
+        # result_xspace.min_corner = subt(i, xspace.min_corner, xspace.min_corner)
+        result_xspace.max_corner = subt(i, xspace.max_corner, yspace.max_corner)
+    elif alphai == '4':
+        result_xspace.min_corner = subt(i, xspace.min_corner, yspace.min_corner)
+        # result_xspace.max_corner = subt(i, xspace.max_corner, xspace.max_corner)
+    # elif alpha == '5': # Nothing to be done here.
+        # result_xspace.min_corner = subt(i, xspace.min_corner, xspace.min_corner)
+        # result_xspace.max_corner = subt(i, xspace.max_corner, xspace.max_corner)
+    return result_xspace
 
 def cpoint(i, alphai, ypoint, xspace):
     # type: (int, int, tuple, Rectangle) -> Rectangle
@@ -1393,6 +1629,11 @@ def cpoint(i, alphai, ypoint, xspace):
         result_xspace.min_corner = subt(i, xspace.min_corner, ypoint)
     return result_xspace
 
+def intercrect(i, alphai, yrectangle, xspace):
+    # type: (int, int, Rectangle, Rectangle) -> Rectangle
+    result_xspace = Rectangle(xspace.min_corner, xspace.max_corner)
+    result_xspace = intercpoint(i, alphai, yrectangle, xspace)
+    return result_xspace
 
 def crect(i, alphai, yrectangle, xspace):
     # type: (int, int, Rectangle, Rectangle) -> Rectangle
@@ -1417,6 +1658,22 @@ def bpoint(alpha, ypoint, xspace):
         temp = cpoint(i, alphai, ypoint, temp)
     return temp
 
+def interbrect(alpha, yrectangle, xspace):
+    # type: (tuple, Rectangle, Rectangle) -> Rectangle
+    assert (dim(yrectangle.min_corner) == dim(yrectangle.max_corner)), \
+        'xrectangle.min_corner and xrectangle.max_corner do not share the same dimension'
+    assert (dim(xspace.min_corner) == dim(xspace.max_corner)), \
+        'xspace.min_corner and xspace.max_corner do not share the same dimension'
+    assert (dim(alpha) == dim(yrectangle.min_corner)), \
+        'alpha and xrectangle.min_corner do not share the same dimension'
+    assert (dim(xspace.min_corner) == dim(yrectangle.min_corner)), \
+        'xspace.min_corner and xrectangle.min_corner do not share the same dimension'
+    # assert (dim(xspace.max_corner) == dim(yrectangle.max_corner)), \
+    #    'xspace.max_corner and yrectangle.max_corner do not share the same dimension'
+    temp = Rectangle(xspace.min_corner, xspace.max_corner)
+    for i, alphai in enumerate(alpha):
+        temp = intercrect(i, alphai, yrectangle, temp)
+    return temp
 
 def brect(alpha, yrectangle, xspace):
     # type: (tuple, Rectangle, Rectangle) -> Rectangle
@@ -1435,6 +1692,17 @@ def brect(alpha, yrectangle, xspace):
         temp = crect(i, alphai, yrectangle, temp)
     return temp
 
+def interirect(alphaincomp, yrectangle, xspace):
+    # type: (list, Rectangle, Rectangle) -> list
+    assert (dim(yrectangle.min_corner) == dim(yrectangle.max_corner)), \
+        'xrectangle.min_corner and xrectangle.max_corner do not share the same dimension'
+    assert (dim(xspace.min_corner) == dim(xspace.max_corner)), \
+        'xspace.min_corner and xspace.max_corner do not share the same dimension'
+    # assert (dim(alphaincomp_list) == dim(yrectangle.min_corner)), \
+    #    'alphaincomp_list and yrectangle.min_corner do not share the same dimension'
+    # assert (dim(alphaincomp_list) == dim(yrectangle.max_corner)), \
+    #    'alphaincomp_list and yrectangle.max_corner do not share the same dimension'
+    return [interbrect(alphaincomp_i, yrectangle, xspace) for alphaincomp_i in alphaincomp]
 
 def irect(alphaincomp, yrectangle, xspace):
     # type: (list, Rectangle, Rectangle) -> list

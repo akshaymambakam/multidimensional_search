@@ -1,0 +1,9 @@
+topToken
+(Until (0 136) 1 
+(Max x0)
+(and 
+(<= x0 (On (-60 60) (Min x0)) )
+(<= x0 -1)
+)
+)
+bottomToken

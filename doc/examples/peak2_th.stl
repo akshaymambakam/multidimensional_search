@@ -1,0 +1,12 @@
+(F (0 136)
+(and 
+(and
+(<= x0 (On (-10 10) (Min x0)) )
+(<= x0 -1)
+)
+topToken
+(On (0 60) (Max x0))
+bottomToken
+)
+
+)

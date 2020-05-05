@@ -18,7 +18,7 @@ Pareto point is located.
 
 import math
 
-from ParetoLib.Geometry.Point import maxi, mini, greater_equal, less_equal, div, add, r
+from ParetoLib.Geometry.Point import maxi, mini, greater_equal, less_equal, div, mult, add, r
 import ParetoLib.Geometry.Point as Point
 
 
@@ -215,6 +215,27 @@ class Segment (object):
         diagonal = self.diag()
         return Point.norm(diagonal)
 
+    def center_eps(self, eps):
+        # type: (Segment) -> tuple
+        """
+        off by eps from the center of the Segment.
+
+        Args:
+            self (Segment): The Segment, eps: a float value.
+
+        Returns:
+            tuple: eps-center of the Segment.
+
+        Example:
+        >>> x = (0,0)
+        >>> y = (1,1)
+        >>> s = Segment(x,y)
+        >>> s.center_eps(0.01)
+        >>> (0.51,0.51)
+        """
+        offset = mult(self.diag(), eps)
+        return add(self.center(), offset)
+
     def center(self):
         # type: (Segment) -> tuple
         """
@@ -245,14 +266,14 @@ class Segment (object):
             self (Segment): The Segment.
 
         Returns:
-            tuple: Center of the Segment.
+            tuple: rounded center of the Segment.
 
         Example:
         >>> x = (0,0)
-        >>> y = (1,1)
+        >>> y = (3,3)
         >>> s = Segment(x,y)
-        >>> s.center()
-        >>> (0.5,0.5)
+        >>> s.center_round()
+        >>> (1, 1)
         """
         offset = div(self.diag(), 2.0)
         offset = (math.floor(offset[0]), math.floor(offset[1]))

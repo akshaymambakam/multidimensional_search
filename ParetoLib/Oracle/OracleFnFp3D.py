@@ -3,6 +3,7 @@ import io, os
 import ParetoLib.Oracle as RootOracle
 from ParetoLib.Oracle.Oracle import Oracle
 from ParetoLib.Oracle.OracleSTLe import OracleSTLeLib
+from ParetoLib.Oracle.OracleEpsSTLe import OracleEpsSTLe
 from ParetoLib.Search.Search import SearchIntersection2D, SearchIntersection3D, Search2D, EPS, DELTA, STEPS
 
 
@@ -63,7 +64,7 @@ class OracleFnFp3D(Oracle):
 
     	temp_file = open(template_file1, 'r')
     	temp_string = temp_file.read()
-    	temp_string = temp_string.replace('num_fn',str(point[0]))
+    	# temp_string = temp_string.replace('num_fn',str(point[0]))
     	temp_file.close()
     	temp_file = open(scratch_file1, 'w')
     	temp_file.write(temp_string)
@@ -71,7 +72,7 @@ class OracleFnFp3D(Oracle):
 
     	temp_file = open(template_file2, 'r')
     	temp_string = temp_file.read()
-    	temp_string = temp_string.replace('num_fp',str(point[1]))
+    	# temp_string = temp_string.replace('num_fp',str(point[1]))
     	temp_file.close()
     	temp_file = open(scratch_file2, 'w')
     	temp_file.write(temp_string)
@@ -84,10 +85,10 @@ class OracleFnFp3D(Oracle):
         min_x, min_y, min_z = self.min_tuple
         max_x, max_y, max_z = self.max_tuple
 
-        orac1 = OracleSTLeLib()
+        orac1 = OracleEpsSTLe(boundOnCount=int(point[0]), intvlEpsilon=1)
         orac1.from_file(nfile1, human_readable)
-
-        orac2 = OracleSTLeLib()
+  
+        orac2 = OracleEpsSTLe(boundOnCount=int(point[1]), intvlEpsilon=10)
         orac2.from_file(nfile2, human_readable)
 
         output_intersect = SearchIntersection3D(oracle1=orac1, oracle2=orac2,
@@ -98,7 +99,7 @@ class OracleFnFp3D(Oracle):
                       max_cornery=max_y,
                       max_cornerz=max_z,
                       epsilon=EPS,
-                      delta=0.01,
+                      delta=0.001,
                       max_step=STEPS,
                       blocking=False,
                       sleep=0,

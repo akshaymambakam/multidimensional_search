@@ -26,7 +26,7 @@ def pareto_2D_func_intersection(min_tuple, max_tuple):
                 max_cornerx=max_x,
                 max_cornery=max_y,
                 epsilon=EPS,
-                delta=0.0001,
+                delta=0.01,
                 max_step=STEPS,
                 blocking=False,
                 sleep=0,
@@ -105,9 +105,9 @@ def pareto_2D_Intersection(ecg_name, numParams, formula_name1, formula_name2, mi
   print output_intersect
   return output_intersect
 
-(intersection, border, xspace) = pareto_2D_Intersection('221', 2, 'ecg2_fn2D', 'ecg2_fp2D', (0, -5.0), (70, 5.0))
+#(intersection, border, xspace, intersect_region) = pareto_2D_Intersection('221', 2, 'ecg2_fn2D', 'ecg2_fp2D', (0, -5.0), (70, 5.0))
 
-#(intersection, border, xspace) = pareto_2D_func_intersection((0.0, 0.0), (1.0, 1.0))
+(intersection, border, xspace, intersect_region) = pareto_2D_func_intersection((0.0, 0.0), (1.0, 1.0))
 
-rs = ResultSet(border=border, yup=intersection, xspace=xspace)
+rs = ResultSet(border=border, yup=intersect_region, xspace=xspace)
 rs.plot_2D()
